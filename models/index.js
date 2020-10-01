@@ -11,7 +11,10 @@ const Page = db.define('page', {
   },
   slug: {
     type: Sequelize.STRING,
-    allowNull:false
+    allowNull: false,
+    validate: {
+      isAlphanumeric: true
+    }
   },
   content: {
     type: Sequelize.TEXT,
@@ -36,6 +39,15 @@ const User = db.define('user', {
     }
   }
 });
+
+Page.beforeValidate((page) => {
+  // function slug(Page) {
+    const title = page.title
+    if (page.slug === false) {
+      return title.replace(/\s+/g, '_').replace(/\W/g, '');
+    }
+  // }
+})
 
 
 module.exports = {

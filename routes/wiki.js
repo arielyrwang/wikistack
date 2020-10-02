@@ -1,10 +1,30 @@
 const router = require('express').Router();
-const { addPage } = require('../views');
+const { addPage, wikiPage, main } = require('../views');
 
-const { Page } = require("../models");
+const { Page, User  } = require("../models");
 
-router.get('/', (req, res, next) => {
-  res.send('got to GET /wiki/')
+router.get('/', async (req, res, next) => {
+  const pages = await Page.findAll()
+  res.send(main(pages))
+});
+
+router.post('/', async (req, res, next) => {
+  try {
+    const [user, wasCreated] = await User.findOrCreate({ // findOrCreate comes back woth an array!
+      where: {
+        name: req.body.name,
+        email: req.body.email
+      }
+    })
+
+    const page = await Page.create(req.body);
+    await page.save()
+    await page.setAuthor(user)
+    // make sure we only redirect *after* our save is complete! Don't forget to `await` the previous step. `create` returns a Promise.
+    res.redirect(`/wiki/${page.slug}`)
+  } catch (error) { 
+    next(error) 
+  }
 });
 
 router.get('/add',(req, res, next)=> {
@@ -12,27 +32,22 @@ router.get('/add',(req, res, next)=> {
   res.send(addPage());
 });
 
-router.post('/', async (req, res, next) => {
-
-  // STUDENT ASSIGNMENT:
-  // add definitions for `title` and `content`
-
+router.get('/:slug', async (req, res, next) => {
   try {
-    const page = await Page.create({
-      title: req.body.title,
-      content: req.body.content,
-      slug: req.body.slug
-    });
+    const page = await Page.findOne({
+      where: {
+        slug: req.params.slug
+      }
+    })
+    const author = await page.getAuthor()
+    res.send(wikiPage(page, author))
+  } catch (error) {
+    next(error)
+  }
+})
 
-    // make sure we only redirect *after* our save is complete! Don't forget to `await` the previous step. `create` returns a Promise.
-    res.redirect('/');
-  } catch (error) { next(error) }
-});
 
 
-router.post('/',(req, res, next)=> {
-  res.json(req.body)
-});
 
 
 

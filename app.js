@@ -4,7 +4,7 @@ const { db, Page, User } = require('./models');
 
 const app = express();
 
-const html = require('./views/layout')
+const layout = require('./views/layout')
 const wikiRouter = require('./routes/wiki');
 const usersRouter = require('./routes/users');
 
@@ -13,26 +13,23 @@ app.use(express.static(__dirname + '/public'))
 
 app.use(express.urlencoded({extended : false}))
 
+// mouting on /wiki and /user
 app.use('/wiki', wikiRouter);
+app.use('/users', usersRouter)
 //get requests
 app.get('/', (req, res, next)=> {
-  res.send(html());
+  res.send(layout('hello world!!!!!!'));
 });
 
 app.get('/',(req,res,next)=> {
   res.redirect('/wiki');
 });
 
+
 //port
-
-db.authenticate()
-  .then(() => {
-    console.log('connected to the database');
-  });
-
 const init = async () => {
-  await Page.sync();
-  await User.sync();
+  // await Page.sync();
+  // await User.sync();
   await db.sync();
   // make sure that you have a PORT constant
   const PORT = 1337
